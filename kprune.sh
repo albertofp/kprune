@@ -15,6 +15,19 @@ if ! command -v kubectl &> /dev/null; then
   fi
 fi
 
+if ! command -v jq &> /dev/null; then
+  echo "jq not found"
+  read -p "Do you want to install jq? [y/N] " -n 1 -r
+  echo
+  if [[ $REPLY =~ ^[Yy]$ ]]; then
+    echo "Installing gum..."
+    brew install jq
+  else
+    echo "Skipping jq installation."
+    exit 1
+  fi
+fi
+
 if ! command -v gum &> /dev/null; then
   echo "gum not found"
   read -p "Do you want to install gum? [y/N] " -n 1 -r
