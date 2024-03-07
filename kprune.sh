@@ -28,9 +28,14 @@ if ! command -v gum &> /dev/null; then
   fi
 fi
 
-SUCCEEDED_NR=$(kubectl get pods --field-selector=status.phase==Succeeded -o name | wc -l | tr -d ' ')
-FAILED_NR=$(kubectl get pods --field-selector=status.phase==Failed -o name | wc -l | tr -d ' ')
-CURRENT_NS=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+if [[ $1 != "" ]]; then
+  CURRENT_NS=$1 
+else
+  CURRENT_NS=$(kubectl config view --minify --output 'jsonpath={..namespace}')
+fi
+
+SUCCEEDED_NR=$(kubectl -n "$CURRENT_NS" get pods --field-selector=status.phase==Succeeded -o name | wc -l | tr -d ' ')
+FAILED_NR=$(kubectl -n "$CURRENT_NS" get pods --field-selector=status.phase==Failed -o name | wc -l | tr -d ' ')
 POD_NR=$((SUCCEEDED_NR + FAILED_NR))
 
 if [[ $POD_NR -eq 0 ]]; then
@@ -42,14 +47,17 @@ fi
 
 gum style  \
       --foreground 292 --border-foreground 292 --border normal \
-      "Pruning $SUCCEEDED_NR Suceeded and $FAILED_NR Failed pods in namespace $(gum style --bold --foreground 450 "$CURRENT_NS")" 
+      "Pruning $SUCCEEDED_NR Succeeded and $FAILED_NR Failed pods in namespace $(gum style --bold --foreground 450 "$CURRENT_NS")" 
 
 gum confirm \
   --selected.foreground="292" \
   --unselected.foreground="292" \
   --prompt.foreground="292" \
   --default=false "Proceed?" && \
-gum spin --spinner minidot --title "Pruning pods..." -- \
-  "$(kubectl delete pods --field-selector=status.phase==Succeeded && \
-    kubectl delete pods --field-selector=status.phase==Failed
-echo "Finished pruning $POD_NR pods")"
+  if [[ $SUCCEEDED_NR -gt 0 ]]; then
+    kubectl -n "$CURRENT_NS" delete pods --field-selector=status.phase==Succeeded
+  fi && \
+  if [[ $FAILED_NR -gt 0 ]]; then
+    kubectl -n "$CURRENT_NS" delete pods --field-selector=status.phase==Failed
+  fi && \
+  echo "Finished pruning $POD_NR pods"
