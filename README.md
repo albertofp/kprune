@@ -1,6 +1,5 @@
 ## Dependencies
 
-- [jq](https://github.com/jqlang/jq)
 - [gum](https://github.com/charmbracelet/gum)
 - [kubectl](https://github.com/kubernetes/kubectl)
 
