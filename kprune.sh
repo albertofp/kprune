@@ -28,6 +28,14 @@ if ! command -v gum &> /dev/null; then
   fi
 fi
 
+if [[ $1 == "-h" || $1 == "--help" ]]; then
+  echo "Usage: $(basename $0) [namespace] -- Prune terminated(succeeded/failed) pods in a namespace
+  Args:
+    namespace: The namespace to be pruned (default: current namespace)
+  "
+  exit 0
+fi
+
 if [[ $1 != "" ]]; then
   CURRENT_NS=$1 
 else
